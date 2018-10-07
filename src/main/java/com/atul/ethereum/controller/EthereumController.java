@@ -10,9 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.web3j.crypto.CipherException;
+import org.web3j.protocol.exceptions.TransactionException;
 
+import com.atul.ethereum.model.SendEtherModel;
 import com.atul.ethereum.services.IWeb3jBasicOPSService;
 
 
@@ -42,10 +45,14 @@ public class EthereumController {
 		return web3jService.etherBalance(user);
 	}
 	
-	/*@RequestMapping(value = "/sendEther/{to}/{ethers}")
-	public String sendEther(@PathVariable("to") String to,
-			@PathVariable("ethers") double ethers) throws IOException, InterruptedException, ExecutionException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CipherException, TransactionTimeoutException{
-		return web3jService.transcat(to,ethers);
-	}*/
+	@GetMapping(value = "/getAddressFromWallet/{walletName}")
+	public String getAddressFromWallet(@PathVariable("walletName") String walletName) throws IOException, InterruptedException, ExecutionException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CipherException{
+		return web3jService.getPublicAddressFromWallet(walletName);
+	}
+	
+	@PostMapping(value = "/sendEther")
+	public String sendEther(@RequestBody SendEtherModel sendEtherModel) throws IOException, InterruptedException, ExecutionException, TransactionException, CipherException{
+		return web3jService.transcat(sendEtherModel);
+	}
 	
 }

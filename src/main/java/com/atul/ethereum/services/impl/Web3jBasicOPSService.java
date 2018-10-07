@@ -15,16 +15,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.admin.Admin;
+import org.web3j.protocol.admin.methods.response.PersonalUnlockAccount;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 
+import com.atul.ethereum.model.SendEtherModel;
 import com.atul.ethereum.services.IWeb3jBasicOPSService;
 
 
@@ -56,7 +63,7 @@ public class Web3jBasicOPSService implements IWeb3jBasicOPSService {
 				new File(walletPath));
 
 		Credentials credentials = WalletUtils.loadCredentials(defaultWalletPassword,
-				walletPath + fileName);
+				walletPath + "/" + fileName);
 		System.out.println("Users wallet address : " + credentials.getAddress());
 		return "Users wallet address : " + credentials.getAddress();
 	}
@@ -73,16 +80,46 @@ public class Web3jBasicOPSService implements IWeb3jBasicOPSService {
 		return "Ether Balance = " + wei.toString();
 
 	}
-
 	
 	
-	public String transcat(String walletName, String walletPassPhres,String receiversAddress, double ethers) throws IOException, CipherException, InterruptedException, ExecutionException, TransactionException{
+	public String getPublicAddressFromWallet(String walletName) throws NoSuchAlgorithmException, NoSuchProviderException,
+	InvalidAlgorithmParameterException, CipherException, IOException {
+		Credentials credentials = WalletUtils.loadCredentials(defaultWalletPassword,
+				walletPath + "/" + walletName);
+		System.out.println("Users wallet address : " + credentials.getAddress());
+		return "Users wallet address : " + credentials.getAddress();
+	}
+	
+	
+	public String transcat(SendEtherModel sendEtherModel) throws IOException, CipherException, InterruptedException, TransactionException, ExecutionException{
+		
+		
+		Admin web3jAdmin = Admin.build(new HttpService());
 		
 		
 		Credentials credentials = WalletUtils.loadCredentials(defaultWalletPassword,
-				walletPath + "/" + walletName);
-		CompletableFuture<TransactionReceipt> transactionReceipt = Transfer.sendFunds(
-		        web3j, credentials, receiversAddress, BigDecimal.valueOf(ethers), Convert.Unit.ETHER).sendAsync();
+				walletPath + "/" + sendEtherModel.getWalletName());
+		
+		PersonalUnlockAccount personalUnlockAccount = web3jAdmin.personalUnlockAccount(sendEtherModel.getSendersAddress(), defaultWalletPassword).send();
+		if(personalUnlockAccount.accountUnlocked()) {
+			BigInteger value = Convert.toWei(sendEtherModel.getEthers()+"", Convert.Unit.ETHER).toBigInteger();
+			EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
+					sendEtherModel.getSendersAddress(), DefaultBlockParameterName.LATEST).sendAsync().get();
+
+			BigInteger gasLimit = new BigInteger("21000");
+			BigInteger gasPrice = new BigInteger("21000");
+			
+		    BigInteger nonce = ethGetTransactionCount.getTransactionCount();
+			RawTransaction rawTransaction  = RawTransaction.createEtherTransaction(
+		             nonce, gasPrice, gasLimit, sendEtherModel.getReceiversAddress(), value);
+//			rawTransaction.send();
+//			rawTransaction.
+			
+			System.out.println(rawTransaction);
+		}
+//		
+//		CompletableFuture<TransactionReceipt> transactionReceipt = Transfer.sendFunds(
+//		        web3j, credentials, sendEtherModel.getReceiversAddress(), BigDecimal.valueOf(sendEtherModel.getEthers()), Convert.Unit.ETHER).sendAsync();
 //		transactionReceipt.sendAsync()getClass();
 //		String currentTime = java.time.LocalDateTime.now().toString(); 	
 		/*String data = "Transfered " + ethers + " ETH from " + credentials.getAddress() +

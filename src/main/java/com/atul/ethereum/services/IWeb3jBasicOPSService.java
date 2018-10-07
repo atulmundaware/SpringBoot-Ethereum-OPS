@@ -9,6 +9,8 @@ import java.util.concurrent.ExecutionException;
 import org.web3j.crypto.CipherException;
 import org.web3j.protocol.exceptions.TransactionException;
 
+import com.atul.ethereum.model.SendEtherModel;
+
 public interface IWeb3jBasicOPSService {
 
 	public String sendAsynchronousRequest() throws IOException, InterruptedException, ExecutionException;
@@ -21,7 +23,10 @@ public interface IWeb3jBasicOPSService {
 	public String etherBalance(String user) throws InterruptedException, ExecutionException, NoSuchAlgorithmException,
 	NoSuchProviderException, InvalidAlgorithmParameterException, CipherException, IOException;
 
-	public String transcat(String walletName, String walletPassPhres,String receiversAddress, double ethers) throws IOException, CipherException, InterruptedException, ExecutionException, TransactionException;
+	public String getPublicAddressFromWallet(String walletName) throws NoSuchAlgorithmException, NoSuchProviderException,
+	InvalidAlgorithmParameterException, CipherException, IOException;
+	
+	public String transcat(SendEtherModel sendEtherModel) throws IOException, CipherException, InterruptedException, TransactionException, ExecutionException;
 		
 }
 
